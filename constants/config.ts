@@ -1,34 +1,32 @@
 /**
  * App Configuration
  *
- * API_URL is read from the environment variable EXPO_PUBLIC_API_URL.
- * 
- * Environment files:
- *   .env             → Development (default)
- *   .env.production  → Production
+ * API_URL is read from EXPO_PUBLIC_API_URL at build time.
  *
- * To switch environments, Expo automatically picks up .env files.
- * For production builds, rename .env.production to .env or set
- * the variable in your CI/CD pipeline.
+ * Local dev (.env):
+ *   EXPO_PUBLIC_API_URL=http://10.0.2.2:8002        (Android emulator)
+ *   EXPO_PUBLIC_API_URL=http://192.168.x.x:8002     (physical device on Wi‑Fi)
  *
- * NOTE: All Expo public env vars must be prefixed with EXPO_PUBLIC_
+ * Production APK:
+ *   npm run android:apk
+ *   or set EXPO_PUBLIC_API_URL=https://peoplepulse.iswot.in before building
  */
 
+const PRODUCTION_API_URL = "https://peoplepulse.iswot.in";
+
 const ENV = {
-    development: {
-        API_URL: 'http://192.168.1.70:8000',
-    },
-    production: {
-        API_URL: 'https://your-production-server.com',
-    },
+  development: {
+    API_URL: "http://10.0.2.2:8002",
+  },
+  production: {
+    API_URL: PRODUCTION_API_URL,
+  },
 };
 
-const getEnvConfig = () => {
-    if (__DEV__) {
-        return ENV.development;
-    }
-    return ENV.production;
-};
+const getEnvConfig = () => (__DEV__ ? ENV.development : ENV.production);
 
-// Use the env variable if set, otherwise fall back to the environment config
-export const API_URL = process.env.EXPO_PUBLIC_API_URL || getEnvConfig().API_URL;
+export const API_URL = (
+  process.env.EXPO_PUBLIC_API_URL || getEnvConfig().API_URL
+).replace(/\/$/, "");
+
+export const IS_PRODUCTION_API = API_URL.startsWith("https://");

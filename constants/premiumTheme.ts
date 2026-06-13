@@ -1,0 +1,31 @@
+/** Shared premium tokens — aligned with Survey-WebSite PulseSync theme */
+export const premium = {
+  bg: '#F1F5F9',
+  bgCard: '#FFFFFF',
+  primary: '#2563EB',
+  text: '#0F172A',
+  textMuted: '#64748B',
+  textLight: '#94A3B8',
+  border: '#E2E8F0',
+  radius: {
+    sm: 12,
+    md: 16,
+    lg: 24,
+  },
+  login: {
+    pageBg: '#020617',
+    emerald: '#10B981',
+    emeraldDark: '#059669',
+    teal: '#14B8A6',
+    indigoGlow: 'rgba(99, 102, 241, 0.28)',
+    emeraldGlow: 'rgba(16, 185, 129, 0.22)',
+    cardBg: 'rgba(255, 255, 255, 0.94)',
+    cardBorder: 'rgba(255, 255, 255, 0.12)',
+    inputBg: 'rgba(248, 250, 252, 0.9)',
+    btnBg: '#0F172A',
+    btnBgPressed: '#1E293B',
+    textOnDark: '#FFFFFF',
+    textMutedOnDark: '#CBD5E1',
+    label: '#64748B',
+  },
+};

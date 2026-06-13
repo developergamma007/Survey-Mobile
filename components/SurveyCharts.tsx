@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 
 interface BarData {
     label: string;
@@ -9,14 +9,14 @@ interface BarData {
 interface SimpleBarChartProps {
     data: BarData[];
     title: string;
+    width?: number;
 }
 
-export const SimpleBarChart: React.FC<SimpleBarChartProps> = ({ data, title }) => {
+export const SimpleBarChart: React.FC<SimpleBarChartProps> = ({ data, title, width }) => {
     const maxCount = Math.max(...data.map(d => d.count), 1);
-    const chartWidth = Dimensions.get('window').width - 60;
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, width ? { width } : null]}>
             <Text style={styles.title}>{title}</Text>
             <View style={styles.chartArea}>
                 {data.map((item, index) => {

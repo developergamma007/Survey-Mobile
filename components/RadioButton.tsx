@@ -1,23 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
-interface RadioButtonProps {
-    label: string;
-    selected: boolean;
-    onPress: () => void;
-}
-
-const RadioButton: React.FC<RadioButtonProps> = ({ label, selected, onPress }) => {
-    return (
-        <TouchableOpacity style={styles.radioContainer} onPress={onPress}>
-            <View style={[styles.outerCircle, selected && styles.selectedOuterCircle]}>
-                {selected && <View style={styles.innerCircle} />}
-            </View>
-            <Text style={styles.label}>{label}</Text>
-        </TouchableOpacity>
-    );
-};
-
 interface RadioButtonGroupProps {
     options: { label: string; value: string }[];
     selectedValue: string;
@@ -31,49 +14,51 @@ export const RadioButtonGroup: React.FC<RadioButtonGroupProps> = ({
 }) => {
     return (
         <View style={styles.groupContainer}>
-            {options.map((option) => (
-                <RadioButton
-                    key={option.value}
-                    label={option.label}
-                    selected={selectedValue === option.value}
-                    onPress={() => onValueChange(option.value)}
-                />
-            ))}
+            {options.map((option) => {
+                const selected = selectedValue === option.value;
+                return (
+                    <TouchableOpacity
+                        key={option.value}
+                        style={[styles.optionChip, selected && styles.optionChipSelected]}
+                        onPress={() => onValueChange(option.value)}
+                        activeOpacity={0.85}
+                    >
+                        <Text style={[styles.optionLabel, selected && styles.optionLabelSelected]}>
+                            {option.label}
+                        </Text>
+                    </TouchableOpacity>
+                );
+            })}
         </View>
     );
 };
 
 const styles = StyleSheet.create({
     groupContainer: {
-        marginVertical: 5,
+        gap: 8,
     },
-    radioContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 12,
-        paddingVertical: 4,
-    },
-    outerCircle: {
-        height: 24,
-        width: 24,
-        borderRadius: 12,
-        borderWidth: 2,
-        borderColor: '#007AFF',
-        alignItems: 'center',
+    optionChip: {
+        width: '100%',
+        minHeight: 44,
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        backgroundColor: '#ffffff',
         justifyContent: 'center',
-        marginRight: 10,
     },
-    selectedOuterCircle: {
-        borderColor: '#007AFF',
+    optionChipSelected: {
+        borderColor: '#6366f1',
+        backgroundColor: '#eef2ff',
     },
-    innerCircle: {
-        height: 12,
-        width: 12,
-        borderRadius: 6,
-        backgroundColor: '#007AFF',
+    optionLabel: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#475569',
+        lineHeight: 20,
     },
-    label: {
-        fontSize: 16,
-        color: '#333',
+    optionLabelSelected: {
+        color: '#312e81',
     },
 });

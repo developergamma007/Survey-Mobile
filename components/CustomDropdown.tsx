@@ -1,120 +1,181 @@
-/// <reference types="nativewind/types" />
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, FlatList, TextInput } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { Dropdown } from 'react-native-element-dropdown';
+import { premium } from '../constants/premiumTheme';
 
-interface Option {
-    id: string | number;
-    label: string;
-    subLabel?: string;
+export interface DropdownOption {
+  id: string | number;
+  label: string;
+  subLabel?: string;
 }
 
 interface CustomDropdownProps {
-    options: Option[];
-    value: string | number;
-    onChange: (value: string | number) => void;
-    placeholder: string;
-    label?: string;
+  options: DropdownOption[];
+  value: string | number;
+  onChange: (value: string | number) => void;
+  placeholder: string;
+  label?: string;
+  disabled?: boolean;
+  search?: boolean;
 }
+
+type DropdownRow = {
+  label: string;
+  value: string;
+  subLabel?: string;
+};
+
+const LIST_SCROLL = { nestedScrollEnabled: true as const };
 
 export default function CustomDropdown({
-    options,
-    value,
-    onChange,
-    placeholder,
-    label,
+  options,
+  value,
+  onChange,
+  placeholder,
+  label,
+  disabled,
+  search,
 }: CustomDropdownProps) {
-    const [modalVisible, setModalVisible] = useState(false);
-    const [search, setSearch] = useState('');
+  const data = useMemo<DropdownRow[]>(
+    () =>
+      options.map((opt) => ({
+        label: opt.label,
+        value: String(opt.id),
+        subLabel: opt.subLabel,
+      })),
+    [options]
+  );
 
-    const selectedOption = options.find((opt) => opt.id === value);
+  const selectedValue = value !== undefined && value !== null && value !== '' ? String(value) : null;
+  const enableSearch = search ?? options.length > 6;
 
-    const filteredOptions = options.filter((opt) =>
-        opt?.label?.toLowerCase().includes(search?.toLowerCase()) ||
-        (opt?.subLabel && opt?.subLabel?.toLowerCase().includes(search?.toLowerCase()))
-    );
-
-    return (
-        <View className="mb-4">
-            {label && (
-                <Text className="text-[10px] font-bold text-slate-500 uppercase ml-1 mb-1">
-                    {label}
-                </Text>
-            )}
-            <TouchableOpacity
-                onPress={() => setModalVisible(true)}
-                className="bg-white border border-slate-200 rounded-xl p-4 flex-row justify-between items-center shadow-sm"
-            >
-                <Text className={selectedOption ? 'text-slate-900 font-bold' : 'text-slate-400 font-bold'}>
-                    {selectedOption ? selectedOption.label : placeholder}
-                </Text>
-                <Ionicons name="chevron-down" size={16} color="#94a3b8" />
-            </TouchableOpacity>
-
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={modalVisible}
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <View className="flex-1 bg-black/50 justify-end">
-                    <View className="bg-white rounded-t-3xl h-[80%] p-6">
-                        <View className="flex-row justify-between items-center mb-6">
-                            <Text className="text-xl font-bold text-slate-900">{placeholder}</Text>
-                            <TouchableOpacity onPress={() => setModalVisible(false)} className="p-2">
-                                <Ionicons name="close" size={24} color="#64748b" />
-                            </TouchableOpacity>
-                        </View>
-
-                        <View className="bg-slate-50 rounded-xl px-4 py-2 flex-row items-center mb-4">
-                            <Ionicons name="search" size={18} color="#94a3b8" />
-                            <TextInput
-                                placeholder="Search..."
-                                value={search}
-                                onChangeText={setSearch}
-                                className="flex-1 ml-3 h-10 text-slate-900 font-medium"
-                            />
-                        </View>
-
-                        <FlatList
-                            data={filteredOptions}
-                            keyExtractor={(item) => item.id.toString()}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        onChange(item.id);
-                                        setModalVisible(false);
-                                        setSearch('');
-                                    }}
-                                    className={`py-4 border-b border-slate-50 flex-row justify-between items-center ${value === item.id ? 'bg-indigo-50/50 -mx-6 px-6' : ''
-                                        }`}
-                                >
-                                    <View className="flex-1">
-                                        <Text className={`text-base ${value === item.id ? 'text-indigo-600 font-bold' : 'text-slate-700 font-medium'}`}>
-                                            {item.label}
-                                        </Text>
-                                        {item.subLabel && (
-                                            <Text className="text-xs text-slate-400 mt-1">
-                                                {item.subLabel}
-                                            </Text>
-                                        )}
-                                    </View>
-                                    {value === item.id && (
-                                        <Ionicons name="checkmark" size={20} color="#4f46e5" />
-                                    )}
-                                </TouchableOpacity>
-                            )}
-                            ListEmptyComponent={() => (
-                                <View className="py-20 items-center">
-                                    <Text className="text-slate-400 font-bold uppercase tracking-widest text-xs">
-                                        No Results Found
-                                    </Text>
-                                </View>
-                            )}
-                        />
-                    </View>
-                </View>
-            </Modal>
-        </View>
-    );
+  return (
+    <View style={styles.wrap}>
+      {label ? <Text style={styles.label}>{label}</Text> : null}
+      <Dropdown
+        data={data}
+        labelField="label"
+        valueField="value"
+        value={selectedValue}
+        placeholder={placeholder}
+        disable={disabled}
+        search={enableSearch}
+        searchPlaceholder="Search..."
+        searchPlaceholderTextColor={premium.textLight}
+        autoScroll={false}
+        onChange={(item) => {
+          const match = options.find((opt) => String(opt.id) === String(item.value));
+          onChange(match?.id ?? item.value);
+        }}
+        style={[styles.dropdown, disabled && styles.dropdownDisabled]}
+        containerStyle={styles.container}
+        placeholderStyle={styles.placeholder}
+        selectedTextStyle={styles.selectedText}
+        itemTextStyle={styles.itemText}
+        inputSearchStyle={styles.searchInput}
+        activeColor="#EEF2FF"
+        maxHeight={280}
+        flatListProps={LIST_SCROLL}
+        showsVerticalScrollIndicator
+        dropdownPosition="auto"
+        renderItem={(item: DropdownRow, selected?: boolean) => (
+          <View style={[styles.itemRow, selected && styles.itemRowSelected]}>
+            <View style={styles.itemTextWrap}>
+              <Text style={[styles.itemTitle, selected && styles.itemTitleSelected]}>{item.label}</Text>
+              {item.subLabel ? <Text style={styles.itemSub}>{item.subLabel}</Text> : null}
+            </View>
+          </View>
+        )}
+      />
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  wrap: {
+    marginBottom: 12,
+  },
+  label: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: premium.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginBottom: 6,
+    marginLeft: 2,
+  },
+  dropdown: {
+    backgroundColor: premium.bgCard,
+    borderColor: premium.border,
+    borderWidth: 1,
+    borderRadius: premium.radius.md,
+    minHeight: 52,
+    paddingHorizontal: 14,
+  },
+  dropdownDisabled: {
+    opacity: 0.55,
+    backgroundColor: '#f8fafc',
+  },
+  container: {
+    backgroundColor: premium.bgCard,
+    borderColor: premium.border,
+    borderRadius: premium.radius.md,
+    borderWidth: 1,
+    marginTop: 4,
+    elevation: 12,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    overflow: 'hidden',
+  },
+  placeholder: {
+    color: premium.textLight,
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  selectedText: {
+    color: premium.text,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  itemText: {
+    color: premium.text,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  searchInput: {
+    borderColor: premium.border,
+    borderRadius: premium.radius.sm,
+    fontSize: 14,
+    color: premium.text,
+    backgroundColor: '#f8fafc',
+    minHeight: 42,
+    paddingHorizontal: 10,
+  },
+  itemRow: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#f1f5f9',
+  },
+  itemRowSelected: {
+    backgroundColor: '#EEF2FF',
+  },
+  itemTextWrap: {
+    flex: 1,
+  },
+  itemTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#334155',
+  },
+  itemTitleSelected: {
+    color: '#4338ca',
+  },
+  itemSub: {
+    fontSize: 12,
+    color: premium.textLight,
+    marginTop: 3,
+  },
+});

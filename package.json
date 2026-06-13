@@ -5,7 +5,12 @@
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
+    "fix-gradle": "cd android && ./gradlew --stop || true && rm -rf ../android/.gradle ../android/build ../android/app/build",
+    "preandroid": "cd android && ./gradlew --stop || true",
     "android": "expo run:android",
+    "android:apk": "EXPO_PUBLIC_API_URL=https://peoplepulse.iswot.in expo run:android --variant release",
+    "release:apk": "bash scripts/release-android-apk.sh",
+    "build:android:release": "bash scripts/release-android-apk.sh",
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint"
@@ -38,6 +43,7 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
+    "react-native-element-dropdown": "^2.12.4",
     "react-native-gesture-handler": "~2.28.0",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",

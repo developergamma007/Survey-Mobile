@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "mobile-app",
-    "slug": "mobile-app",
+    "name": "PeoplePulse Survey",
+    "slug": "peoplepulse-survey",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -13,6 +13,12 @@
       "bundleIdentifier": "com.developergamma.mobileapp"
     },
     "android": {
+      "usesCleartextTraffic": true,
+      "queries": [
+        { "scheme": "geo" },
+        { "scheme": "https", "host": "www.google.com" },
+        { "scheme": "https", "host": "maps.google.com" }
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -43,7 +49,13 @@
       ],
       "expo-secure-store",
       "expo-audio",
-      "expo-video"
+      "expo-video",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Survey app to capture your location with field survey responses."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

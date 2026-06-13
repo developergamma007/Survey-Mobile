@@ -1,53 +1,23 @@
 import "../global.css";
 import { Stack } from 'expo-router';
-import { useEffect, useState } from 'react';
-import * as SecureStore from 'expo-secure-store';
-import { useRouter, useSegments } from 'expo-router';
-import { View, ActivityIndicator } from 'react-native';
+import { View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { layoutStyles } from '../constants/layout';
+import { AdminAuthProvider } from '../contexts/AdminAuthContext';
 
 export default function RootLayout() {
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-    const router = useRouter();
-    const segments = useSegments();
-
-    useEffect(() => {
-        checkAuth();
-    }, [segments]);
-
-    useEffect(() => {
-        if (isAuthenticated === null) return;
-
-        const inAuthGroup = segments[0] === '(tabs)';
-
-        if (isAuthenticated && !inAuthGroup) {
-            router.replace('/(tabs)/home');
-        } else if (!isAuthenticated && segments[0] !== 'login') {
-            // Need to handle redirection to login if not authenticated and not already on login
-            router.replace('/login');
-        }
-    }, [isAuthenticated, segments]);
-
-    const checkAuth = async () => {
-        try {
-            const token = await SecureStore.getItemAsync('token');
-            setIsAuthenticated(!!token);
-        } catch (e) {
-            setIsAuthenticated(false);
-        }
-    };
-
-    if (isAuthenticated === null) {
-        return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" />
-            </View>
-        );
-    }
-
-    return (
-        <Stack>
+  return (
+    <SafeAreaProvider>
+      <AdminAuthProvider>
+        <View style={layoutStyles.root}>
+          <Stack screenOptions={{ contentStyle: layoutStyles.root }}>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="login" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        </Stack>
-    );
+            <Stack.Screen name="admin" options={{ headerShown: false }} />
+          </Stack>
+        </View>
+      </AdminAuthProvider>
+    </SafeAreaProvider>
+  );
 }
