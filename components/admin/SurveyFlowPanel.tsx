@@ -16,6 +16,7 @@ import axios from 'axios';
 import { API_URL } from '../../constants/config';
 import { SCREEN_PADDING } from '../../constants/layout';
 import { premium } from '../../constants/premiumTheme';
+import { parseQuestionConfig, serializeChoiceQuestion } from '../../helpers/surveyText';
 
 interface Ward {
   id: number;
@@ -57,10 +58,13 @@ export default function SurveyFlowPanel() {
       const res = await axios.get(`${API_URL}/api/wards/${encodeURIComponent(wardName)}/questions`);
       if (Array.isArray(res.data)) {
         setQuestions(
-          res.data.map((q: { text: string; options?: string }) => ({
-            text: q.text,
-            options: q.options ? q.options.split(',') : [],
-          }))
+          res.data.map((q: { text: string; options?: string }) => {
+            const config = parseQuestionConfig(q.options);
+            return {
+              text: q.text,
+              options: config.type === 'choice' ? config.options : [],
+            };
+          })
         );
       } else {
         setQuestions([]);
@@ -90,7 +94,10 @@ export default function SurveyFlowPanel() {
     try {
       await axios.post(
         `${API_URL}/api/wards/${encodeURIComponent(selectedWard.ward_name_en)}/questions`,
-        questions
+        questions.map((question) => ({
+          text: question.text,
+          options: serializeChoiceQuestion(question.options),
+        }))
       );
       Alert.alert('Success', 'Questions saved successfully');
     } catch {

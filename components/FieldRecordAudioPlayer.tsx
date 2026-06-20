@@ -13,6 +13,7 @@ import * as SecureStore from 'expo-secure-store';
 import { Ionicons } from '@expo/vector-icons';
 import { premium } from '../constants/premiumTheme';
 import { prepareSurveyAudioForPlayback } from '../helpers/surveyAudioPlayback';
+import { claimFieldAudioPlayback, releaseFieldAudioPlayback } from '../helpers/fieldAudioSession';
 
 type Props = {
   surveyId: number;
@@ -37,6 +38,21 @@ export default function FieldRecordAudioPlayer({ surveyId, hasAudio }: Props) {
   const [trackWidth, setTrackWidth] = useState(1);
   const [error, setError] = useState(false);
 
+  const pauseSelf = useCallback(async () => {
+    const sound = soundRef.current;
+    if (sound) {
+      try {
+        const status = await sound.getStatusAsync();
+        if (status.isLoaded && status.isPlaying) {
+          await sound.pauseAsync();
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+    setPlaying(false);
+  }, []);
+
   const unload = useCallback(async () => {
     try {
       const sound = soundRef.current;
@@ -55,8 +71,9 @@ export default function FieldRecordAudioPlayer({ surveyId, hasAudio }: Props) {
   }, []);
 
   useEffect(() => () => {
+    releaseFieldAudioPlayback(surveyId);
     unload();
-  }, [unload]);
+  }, [surveyId, unload]);
 
   const ensureLoaded = useCallback(async (): Promise<Audio.Sound> => {
     if (soundRef.current) return soundRef.current;
@@ -90,6 +107,7 @@ export default function FieldRecordAudioPlayer({ surveyId, hasAudio }: Props) {
       if (status.didJustFinish) {
         setPlaying(false);
         setPositionMs(0);
+        releaseFieldAudioPlayback(surveyId);
       }
       setPlaying(status.isPlaying);
     });
@@ -105,6 +123,7 @@ export default function FieldRecordAudioPlayer({ surveyId, hasAudio }: Props) {
     setError(false);
     try {
       const sound = await ensureLoaded();
+      claimFieldAudioPlayback(surveyId, pauseSelf);
       await sound.playAsync();
       setPlaying(true);
     } catch (err) {
@@ -123,7 +142,7 @@ export default function FieldRecordAudioPlayer({ surveyId, hasAudio }: Props) {
       loadingRef.current = false;
       setLoading(false);
     }
-  }, [ensureLoaded, unload]);
+  }, [ensureLoaded, unload, surveyId, pauseSelf]);
 
   const togglePlay = async () => {
     const sound = soundRef.current;
@@ -139,7 +158,9 @@ export default function FieldRecordAudioPlayer({ surveyId, hasAudio }: Props) {
     if (status.isPlaying) {
       await sound.pauseAsync();
       setPlaying(false);
+      releaseFieldAudioPlayback(surveyId);
     } else {
+      claimFieldAudioPlayback(surveyId, pauseSelf);
       await sound.playAsync();
       setPlaying(true);
     }

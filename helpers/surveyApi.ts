@@ -41,6 +41,9 @@ export async function uploadSurveyAudio(
         const res = await axios.post(`${API_URL}/api/surveys/upload-audio`, formData, { headers });
         return { audioKey: res.data.audioKey };
     } catch (error: unknown) {
+        if (axios.isAxiosError(error) && error.response?.status === 413) {
+            throw new Error('Audio upload is too large for the server. Please submit again with a shorter recording or increase the backend upload limit.');
+        }
         if (axios.isAxiosError(error) && error.response?.status === 503) {
             const base64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
             return { audio_base64: `data:audio/m4a;base64,${base64}` };

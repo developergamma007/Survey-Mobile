@@ -21,6 +21,7 @@ import { parseWardFromUrl, resolveInitialWardName } from '../../helpers/wardCont
 import { surveyorDefaults, type SurveyorProfile } from '../../helpers/surveyorSession';
 import PulseSyncLoginScreen from '../../components/PulseSyncLoginScreen';
 import { MAX_SURVEY_AUDIO_MS } from '../../helpers/audioLimits';
+import { parseQuestionConfig, questionAnswerKey, readTextAnswerMap, splitQuestionText, writeTextAnswer } from '../../helpers/surveyText';
 
 const INCOME_OPTIONS = [
     { id: 'Below 10,000', label: 'Below ₹10,000' },
@@ -308,7 +309,7 @@ function SurveyFormScreen({ profile }: { profile: SurveyorProfile | null }) {
                 await stopRecording();
                 Alert.alert(
                     'Recording limit',
-                    'Audio recording stopped at 5 minutes. Only the first 5 minutes are saved.',
+                    'Audio recording stopped at 3 minutes. Only the first 3 minutes are saved.',
                 );
             }, MAX_SURVEY_AUDIO_MS);
         } catch (err) {
@@ -462,6 +463,11 @@ function SurveyFormScreen({ profile }: { profile: SurveyorProfile | null }) {
                         : e.message;
                 if (e.response?.status === 403) {
                     Alert.alert('Cannot Submit', message || 'Admin accounts cannot submit surveys.');
+                } else if (e.response?.status === 413) {
+                    Alert.alert(
+                        'Error',
+                        'Submission failed: request is too large, most likely because the audio upload was rejected. Please retry with a shorter recording or increase the backend upload limit.'
+                    );
                 } else {
                     Alert.alert('Error', `Submission failed: ${message}`);
                 }
@@ -720,24 +726,50 @@ function SurveyFormScreen({ profile }: { profile: SurveyorProfile | null }) {
                         ) : dynamicQuestions.length === 0 ? (
                             <Text style={styles.wardHint}>No questions configured for this ward yet.</Text>
                         ) : (
-                            dynamicQuestions.map((dq, index) => (
-                                <View key={dq.id} style={styles.questionCard}>
-                                    <Text style={styles.questionLabel}>Q{index + 1} · {dq.text}</Text>
-                                    <RadioButtonGroup
-                                        options={dq.options.split(',').map(opt => ({ label: opt.trim(), value: opt.trim() })).filter(o => o.label)}
-                                        selectedValue={form.dynamicAnswers[dq.text]}
-                                        onValueChange={(val) => setForm(prev => ({ ...prev, dynamicAnswers: { ...prev.dynamicAnswers, [dq.text]: val } }))}
-                                    />
-                                    {isOthersSelection(form.dynamicAnswers[dq.text]) && (
-                                        <TextInput
-                                            style={styles.input}
-                                            value={form.dynamicAnswers[`${dq.text}__other`] || ''}
-                                            onChangeText={t => setForm(prev => ({ ...prev, dynamicAnswers: { ...prev.dynamicAnswers, [`${dq.text}__other`]: t } }))}
-                                            placeholder="Please specify"
-                                        />
-                                    )}
-                                </View>
-                            ))
+                            dynamicQuestions.map((dq, index) => {
+                                const config = parseQuestionConfig(dq.options);
+                                const answerKey = questionAnswerKey(dq.text);
+                                const { primary, secondary } = splitQuestionText(dq.text);
+                                return (
+                                    <View key={dq.id} style={styles.questionCard}>
+                                        <Text style={styles.questionLabel}>Q{index + 1} · {primary}</Text>
+                                        {secondary ? <Text style={styles.questionSubLabel}>{secondary}</Text> : null}
+                                        {config.type === 'text' ? (
+                                            (config.fields.length ? config.fields : ['response']).map((field) => {
+                                                const textAnswers = readTextAnswerMap(form.dynamicAnswers[answerKey]);
+                                                return (
+                                                    <TextInput
+                                                        key={`${dq.id}-${field}`}
+                                                        style={styles.input}
+                                                        value={textAnswers[field] || ''}
+                                                        onChangeText={(text) => setForm(prev => ({
+                                                            ...prev,
+                                                            dynamicAnswers: writeTextAnswer(prev.dynamicAnswers, answerKey, field, text),
+                                                        }))}
+                                                        placeholder={field === 'response' ? 'Type your answer' : field}
+                                                    />
+                                                );
+                                            })
+                                        ) : (
+                                            <>
+                                                <RadioButtonGroup
+                                                    options={config.options.map(opt => ({ label: opt, value: opt }))}
+                                                    selectedValue={form.dynamicAnswers[answerKey]}
+                                                    onValueChange={(val) => setForm(prev => ({ ...prev, dynamicAnswers: { ...prev.dynamicAnswers, [answerKey]: val } }))}
+                                                />
+                                                {isOthersSelection(form.dynamicAnswers[answerKey]) && (
+                                                    <TextInput
+                                                        style={styles.input}
+                                                        value={form.dynamicAnswers[`${answerKey}__other`] || ''}
+                                                        onChangeText={t => setForm(prev => ({ ...prev, dynamicAnswers: { ...prev.dynamicAnswers, [`${answerKey}__other`]: t } }))}
+                                                        placeholder="Please specify"
+                                                    />
+                                                )}
+                                            </>
+                                        )}
+                                    </View>
+                                );
+                            })
                         )}
                     </View>
 
