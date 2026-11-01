@@ -23,9 +23,10 @@ import FieldRecordsPanel from '../../components/admin/FieldRecordsPanel';
 import SurveyFlowPanel from '../../components/admin/SurveyFlowPanel';
 import FormFieldsPanel from '../../components/admin/FormFieldsPanel';
 import UsersPanel from '../../components/admin/UsersPanel';
+import VolunteerAnalysisPanel from '../../components/admin/VolunteerAnalysisPanel';
 import type { SurveyResponseRow } from '../../helpers/fieldRecords';
 
-const VALID_TABS = new Set<AdminTab>(['insights', 'list', 'questions', 'fields', 'users']);
+const VALID_TABS = new Set<AdminTab>(['insights', 'list', 'questions', 'fields', 'users', 'volunteer-analysis']);
 
 function parseTab(value: string | string[] | undefined): AdminTab {
   const raw = Array.isArray(value) ? value[0] : value;
@@ -156,6 +157,7 @@ export default function AdminDashboard() {
             {activeTab === 'questions' && <SurveyFlowPanel />}
             {activeTab === 'fields' && <FormFieldsPanel />}
             {activeTab === 'users' && <UsersPanel />}
+            {activeTab === 'volunteer-analysis' && <VolunteerAnalysisPanel responses={responses} onRefresh={fetchResponses} />}
           </>
         )}
       </View>

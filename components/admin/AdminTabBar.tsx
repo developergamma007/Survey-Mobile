@@ -2,7 +2,7 @@ import { ScrollView, TouchableOpacity, Text, StyleSheet, View } from 'react-nati
 import { Ionicons } from '@expo/vector-icons';
 import { premium } from '../../constants/premiumTheme';
 
-export type AdminTab = 'insights' | 'list' | 'questions' | 'fields' | 'users';
+export type AdminTab = 'insights' | 'list' | 'questions' | 'fields' | 'users' | 'volunteer-analysis';
 
 const TABS: { id: AdminTab; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { id: 'insights', label: 'Insights', icon: 'grid-outline' },
@@ -10,6 +10,7 @@ const TABS: { id: AdminTab; label: string; icon: keyof typeof Ionicons.glyphMap 
   { id: 'questions', label: 'Survey Flow', icon: 'git-branch-outline' },
   { id: 'fields', label: 'Form Fields', icon: 'options-outline' },
   { id: 'users', label: 'Users', icon: 'people-outline' },
+  { id: 'volunteer-analysis', label: 'Volunteer Analysis', icon: 'bar-chart-outline' },
 ];
 
 type Props = {

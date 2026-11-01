@@ -97,7 +97,7 @@ export default function AdminProfile() {
           <Ionicons name="speedometer-outline" size={22} color={L.emeraldDark} />
           <View style={styles.menuTextWrap}>
             <Text style={styles.menuTitle}>PulseSync Admin</Text>
-            <Text style={styles.menuSub}>Insights, field records, survey flow, users</Text>
+            <Text style={styles.menuSub}>Insights, field records, survey flow, users and volunteer analysis</Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color="#ccc" />
         </TouchableOpacity>
@@ -125,6 +125,15 @@ export default function AdminProfile() {
           <View style={styles.menuTextWrap}>
             <Text style={styles.menuTitle}>Users</Text>
             <Text style={styles.menuSub}>Field surveyors registered via sign-in</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="#ccc" />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/admin?tab=volunteer-analysis')}>
+          <Ionicons name="bar-chart-outline" size={22} color={L.emeraldDark} />
+          <View style={styles.menuTextWrap}>
+            <Text style={styles.menuTitle}>Volunteer Analysis</Text>
+            <Text style={styles.menuSub}>Surveyor activity, GPS coverage and ward totals</Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color="#ccc" />
         </TouchableOpacity>

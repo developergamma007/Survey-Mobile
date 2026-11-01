@@ -10,7 +10,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.developergamma.mobileapp"
+      "bundleIdentifier": "com.developergamma.mobileapp",
+      "config": {
+        "googleMapsApiKey": "AIzaSyAMwvHIaLfO5YOidTFeM-GOO_H_ziMdAfU"
+      }
     },
     "android": {
       "usesCleartextTraffic": true,
@@ -27,7 +30,12 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.developergamma.mobileapp"
+      "package": "com.developergamma.mobileapp",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyAMwvHIaLfO5YOidTFeM-GOO_H_ziMdAfU"
+        }
+      }
     },
     "web": {
       "output": "static",

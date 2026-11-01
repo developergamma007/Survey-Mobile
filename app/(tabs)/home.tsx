@@ -121,6 +121,7 @@ function SurveyFormScreen({ profile }: { profile: SurveyorProfile | null }) {
         pollingStationId: 0,
         dynamicAnswers: {} as Record<string, string>,
     });
+    const [mySurveyEntryCount, setMySurveyEntryCount] = useState<number | null>(null);
 
     const [fieldConfig, setFieldConfig] = useState<SurveyFieldConfig>(DEFAULT_FIELD_CONFIG);
     const [linkedWardName, setLinkedWardName] = useState('');
@@ -309,7 +310,7 @@ function SurveyFormScreen({ profile }: { profile: SurveyorProfile | null }) {
                 await stopRecording();
                 Alert.alert(
                     'Recording limit',
-                    'Audio recording stopped at 3 minutes. Only the first 3 minutes are saved.',
+                    'Audio recording stopped after the 30-minute limit.',
                 );
             }, MAX_SURVEY_AUDIO_MS);
         } catch (err) {
@@ -352,6 +353,24 @@ function SurveyFormScreen({ profile }: { profile: SurveyorProfile | null }) {
         }
     }
 
+    useEffect(() => {
+        let active = true;
+        async function loadMyEntryCount() {
+            try {
+                const token = await SecureStore.getItemAsync('token');
+                if (!token) return;
+                const response = await axios.get(`${API_URL}/api/my-survey-entry-count`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (active) setMySurveyEntryCount(Number(response.data?.entry_count) || 0);
+            } catch {
+                if (active) setMySurveyEntryCount(null);
+            }
+        }
+        loadMyEntryCount();
+        return () => { active = false; };
+    }, [profile?.username]);
+
     const handleSubmit = async () => {
         if (!form.surveyorName.trim()) {
             Alert.alert('Error', 'Surveyor name is required before submitting.');
@@ -380,6 +399,11 @@ function SurveyFormScreen({ profile }: { profile: SurveyorProfile | null }) {
 
             const loc = await resolveCurrentLocation();
             if (loc) setLocation(loc);
+            const currentLocation = loc ?? location;
+            if (!currentLocation?.coords) {
+                Alert.alert('Location required', 'Enable location services and GPS permission before submitting this survey.');
+                return;
+            }
 
             const uri = await stopRecording();
             const audioUpload = await uploadSurveyAudio(uri, token);
@@ -419,8 +443,8 @@ function SurveyFormScreen({ profile }: { profile: SurveyorProfile | null }) {
                 interviewerCaste: resolveOthersValue(form.interviewerCaste, form.interviewerCasteOther),
                 interviewerCommunity: resolveOthersValue(form.interviewerCommunity, form.interviewerCommunityOther),
                 interviewerEducation: resolveOthersValue(form.interviewerEducation, form.interviewerEducationOther),
-                latitude: loc?.coords.latitude ?? location?.coords.latitude ?? null,
-                longitude: loc?.coords.longitude ?? location?.coords.longitude ?? null,
+                latitude: currentLocation.coords.latitude,
+                longitude: currentLocation.coords.longitude,
                 audioKey: audioUpload.audioKey ?? null,
                 audio_base64: audioUpload.audio_base64 ?? null,
                 dynamicAnswers: JSON.stringify(structuredAnswers),
@@ -440,6 +464,7 @@ function SurveyFormScreen({ profile }: { profile: SurveyorProfile | null }) {
 
             await axios.post(`${API_URL}/surveys`, payload, { headers });
             Alert.alert('Success', 'Survey Submitted!');
+            setMySurveyEntryCount((count) => count === null ? count : count + 1);
             setForm(prev => ({
                 ...prev,
                 interviewerName: '', interviewerAge: '', interviewerGender: '', interviewerGenderOther: '',
@@ -520,6 +545,10 @@ function SurveyFormScreen({ profile }: { profile: SurveyorProfile | null }) {
                     <TouchableOpacity style={[styles.startButton, isStarting && { opacity: 0.7 }]} onPress={handleStartSurvey} disabled={isStarting}>
                         {isStarting ? <ActivityIndicator size="large" color="white" /> : <Text style={styles.startText}>Start Survey</Text>}
                     </TouchableOpacity>
+                    <View style={styles.entryCountBadge}>
+                        <Ionicons name="checkmark-done-outline" size={16} color="#047857" />
+                        <Text style={styles.entryCountText}>Your completed entries: <Text style={styles.entryCountValue}>{mySurveyEntryCount ?? '...'}</Text></Text>
+                    </View>
                     <Text style={styles.startNote}>Audio recording and location capture will begin automatically</Text>
                 </View>
             ) : (
@@ -794,6 +823,9 @@ const styles = StyleSheet.create({
     subGreetingText: { fontSize: 14, color: '#666', marginTop: 2 },
     adminLink: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, backgroundColor: '#eef2ff', borderWidth: 1, borderColor: '#c7d2fe' },
     adminLinkText: { color: '#4338ca', fontWeight: '700', fontSize: 12 },
+    entryCountBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 14, borderRadius: 20, backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#A7F3D0', paddingHorizontal: 13, paddingVertical: 8 },
+    entryCountText: { color: '#047857', fontSize: 12, fontWeight: '700' },
+    entryCountValue: { fontSize: 16, fontWeight: '900' },
     section: { marginBottom: 20, paddingVertical: 4 },
     sectionPlain: { marginBottom: 16, paddingVertical: 2 },
     sectionTitle: { fontSize: 13, fontWeight: '800', marginBottom: 12, color: '#64748b', letterSpacing: 0.8, textTransform: 'uppercase' },
