@@ -3,7 +3,8 @@ import { View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity, Alert,
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, useRouter } from 'expo-router';
 import { useAdminAuth } from '../../contexts/AdminAuthContext';
-import { useAudioRecorder, AudioModule, RecordingPresets, setAudioModeAsync, useAudioRecorderState } from 'expo-audio';
+import { useAudioRecorder, AudioModule, setAudioModeAsync, useAudioRecorderState } from 'expo-audio';
+import { SURVEY_FIELD_RECORDING_OPTIONS } from '../../helpers/surveyRecordingOptions';
 import * as Location from 'expo-location';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
@@ -17,7 +18,7 @@ import { fetchFieldConfig, uploadSurveyAudio, DEFAULT_FIELD_CONFIG, type SurveyF
 import { buildStructuredDynamicAnswers } from '../../helpers/surveyFieldKeys';
 import { buildVoterFormPatch, buildVoterSubtitle, pickVoterValue, type VoterSuggestion } from '../../helpers/voterSearch';
 import * as Linking from 'expo-linking';
-import { parseWardFromUrl, resolveInitialWardName } from '../../helpers/wardContext';
+import { findWardByLinkedName, parseWardFromUrl, resolveInitialWardName } from '../../helpers/wardContext';
 import { surveyorDefaults, type SurveyorProfile } from '../../helpers/surveyorSession';
 import PulseSyncLoginScreen from '../../components/PulseSyncLoginScreen';
 import { MAX_SURVEY_AUDIO_MS } from '../../helpers/audioLimits';
@@ -126,9 +127,10 @@ function SurveyFormScreen({ profile }: { profile: SurveyorProfile | null }) {
     const [fieldConfig, setFieldConfig] = useState<SurveyFieldConfig>(DEFAULT_FIELD_CONFIG);
     const [linkedWardName, setLinkedWardName] = useState('');
     const [wards, setWards] = useState<Ward[]>([]);
+    const [assemblies, setAssemblies] = useState<Array<{ assembly_no: number; assembly_name_en: string | null }>>([]);
     const [booths, setBooths] = useState<Booth[]>([]);
     const [dynamicQuestions, setDynamicQuestions] = useState<DynamicQuestion[]>([]);
-    const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+    const audioRecorder = useAudioRecorder(SURVEY_FIELD_RECORDING_OPTIONS);
     const recorderState = useAudioRecorderState(audioRecorder);
     const recordingLimitRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isSurveyStartedRef = useRef(false);
@@ -221,6 +223,9 @@ function SurveyFormScreen({ profile }: { profile: SurveyorProfile | null }) {
             }
         })();
         fetchAllWards();
+        axios.get(`${API_URL}/api/assemblies`).then((res) => {
+            setAssemblies(Array.isArray(res.data) ? res.data : []);
+        }).catch(() => setAssemblies([]));
         fetchFieldConfig().then(setFieldConfig);
         resolveInitialWardName().then(setLinkedWardName);
         const sub = Linking.addEventListener('url', ({ url }) => {
@@ -251,19 +256,23 @@ function SurveyFormScreen({ profile }: { profile: SurveyorProfile | null }) {
 
     useEffect(() => {
         if (!linkedWardName || wards.length === 0) return;
-        const ward = wards.find(w => w.ward_name_en === linkedWardName);
+        const ward = findWardByLinkedName(wards, linkedWardName);
         if (!ward) return;
+        const assemblyRow = assemblies.find((item) => item.assembly_no === ward.assembly_no);
+        const assemblyName = assemblyRow?.assembly_name_en?.trim() || (ward.assembly_no ? `Assembly ${ward.assembly_no}` : '');
         setForm(prev => ({
             ...prev,
             gbaWard: ward.ward_name_en,
             gbaWardId: ward.id,
+            assembly: assemblyName,
+            assemblyNo: ward.assembly_no ?? 0,
             pollingStationName: '',
             pollingStationId: 0,
             pollingStationNumber: '',
             dynamicAnswers: {},
         }));
         fetchFieldConfig(ward.assembly_no, ward.id).then(setFieldConfig);
-    }, [linkedWardName, wards]);
+    }, [linkedWardName, wards, assemblies]);
 
     useEffect(() => {
         if (!form.gbaWardId) {
@@ -561,6 +570,13 @@ function SurveyFormScreen({ profile }: { profile: SurveyorProfile | null }) {
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Surveyor Information</Text>
                         {(sf.ward ?? true) && (
+                            <>
+                            <TextInput
+                                style={[styles.input, styles.inputReadOnly]}
+                                value={form.assembly}
+                                editable={false}
+                                placeholder="Assembly name"
+                            />
                             <CustomDropdown
                                 label="Ward Name"
                                 placeholder="Select ward"
@@ -574,10 +590,15 @@ function SurveyFormScreen({ profile }: { profile: SurveyorProfile | null }) {
                                 onChange={(val) => {
                                     const ward = wards.find((w) => w.id === Number(val));
                                     if (!ward) return;
+                                    const assemblyRow = assemblies.find((item) => item.assembly_no === ward.assembly_no);
+                                    const assemblyName =
+                                        assemblyRow?.assembly_name_en?.trim() ||
+                                        (ward.assembly_no ? `Assembly ${ward.assembly_no}` : '');
                                     setForm((prev) => ({
                                         ...prev,
                                         gbaWard: ward.ward_name_en,
                                         gbaWardId: ward.id,
+                                        assembly: assemblyName,
                                         assemblyNo: ward.assembly_no ?? prev.assemblyNo,
                                         pollingStationName: '',
                                         pollingStationId: 0,
@@ -590,6 +611,7 @@ function SurveyFormScreen({ profile }: { profile: SurveyorProfile | null }) {
                                     setVoterSearchAttempted(false);
                                 }}
                             />
+                            </>
                         )}
 
                         {(sf.pollingStation ?? true) && (

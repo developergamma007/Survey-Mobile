@@ -1,7 +1,5 @@
 /** Field Records helpers — aligned with Survey-WebSite surveyFieldKeys.ts */
 
-import { Share } from 'react-native';
-
 export type SurveyResponseRow = {
   id: number;
   assembly: string | null;
@@ -50,7 +48,7 @@ export const BASE_RECORD_COLUMNS: RecordColumn[] = [
   { key: 'submission_date', label: 'Submission Date' },
   { key: 'survey_start', label: 'Survey Start Time' },
   { key: 'survey_end', label: 'Survey End Time' },
-  { key: 'audio', label: 'Audio' },
+  { key: 'audio', label: 'Survey audio' },
   { key: 'geotag', label: 'Geotag' },
   { key: 'team_code', label: 'Team Code' },
   { key: 'voter_of_constituency', label: 'Voter of Constituency' },
@@ -186,12 +184,6 @@ export function hasSurveyAudio(row: SurveyResponseRow): boolean {
   return !!(row.has_audio || row.audio_url || row.audio_base64);
 }
 
-export function getAudioExportLink(row: SurveyResponseRow): string {
-  if (row.audio_link?.trim()) return row.audio_link.trim();
-  if (row.audio_url?.startsWith('http')) return row.audio_url;
-  return '';
-}
-
 export function hasGeotag(row: SurveyResponseRow): boolean {
   return row.latitude != null && row.longitude != null;
 }
@@ -214,36 +206,3 @@ export function questionColumnLabel(text: string): string {
   return parts[0] || text;
 }
 
-function escapeCsv(value: string): string {
-  return `"${String(value ?? '').replace(/"/g, '""')}"`;
-}
-
-export async function exportRecordsCsv(
-  rows: SurveyResponseRow[],
-  columns: RecordColumn[],
-  filename = 'field-records.csv'
-): Promise<void> {
-  const headers = columns.map((col) => col.label);
-  const lines = [
-    headers.map(escapeCsv).join(','),
-    ...rows.map((row) =>
-      columns
-        .map((col) => {
-          if (col.key === 'audio') {
-            const link = getAudioExportLink(row);
-            if (link) return escapeCsv(link);
-            return escapeCsv(
-              hasSurveyAudio(row) ? 'Recorded (no public link)' : 'Silent'
-            );
-          }
-          return escapeCsv(getRecordCellValue(row, col.key, col.legacyKeys));
-        })
-        .join(',')
-    ),
-  ];
-  const csv = lines.join('\n');
-  await Share.share({
-    message: csv,
-    title: filename,
-  });
-}

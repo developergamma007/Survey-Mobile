@@ -20,7 +20,6 @@ import WardFilterSelect from './WardFilterSelect';
 import FieldRecordAudioPlayer from '../FieldRecordAudioPlayer';
 import {
   BASE_RECORD_COLUMNS,
-  exportRecordsCsv,
   getRecordCellValue,
   hasGeotag,
   hasSurveyAudio,
@@ -29,6 +28,7 @@ import {
   type RecordColumn,
   type SurveyResponseRow,
 } from '../../helpers/fieldRecords';
+import { exportRecordsCsv } from '../../helpers/surveyAudioExport';
 
 type Ward = { id: number; ward_name_en: string };
 type WardQuestion = { id: number; text: string; options: string };

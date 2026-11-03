@@ -14,6 +14,9 @@
 
 const PRODUCTION_API_URL = "https://peoplepulse.iswot.in";
 
+/** Admin web app (Field Records + audio portal links in exports). */
+const PRODUCTION_ADMIN_WEB_URL = "https://peoplepulse.iswot.in";
+
 const ENV = {
   development: {
     API_URL: "http://10.0.2.2:8002",
@@ -27,6 +30,10 @@ const getEnvConfig = () => (__DEV__ ? ENV.development : ENV.production);
 
 export const API_URL = (
   process.env.EXPO_PUBLIC_API_URL || getEnvConfig().API_URL
+).replace(/\/$/, "");
+
+export const ADMIN_WEB_URL = (
+  process.env.EXPO_PUBLIC_ADMIN_WEB_URL || PRODUCTION_ADMIN_WEB_URL
 ).replace(/\/$/, "");
 
 export const IS_PRODUCTION_API = API_URL.startsWith("https://");
