@@ -563,7 +563,6 @@ function SurveyFormScreen({ profile }: { profile: SurveyorProfile | null }) {
                         <Ionicons name="checkmark-done-outline" size={16} color="#047857" />
                         <Text style={styles.entryCountText}>Your completed entries: <Text style={styles.entryCountValue}>{mySurveyEntryCount ?? '...'}</Text></Text>
                     </View>
-                    <Text style={styles.startNote}>Audio recording and location capture will begin automatically</Text>
                 </View>
             ) : (
                 <>
@@ -885,7 +884,6 @@ const styles = StyleSheet.create({
     startContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 80 },
     startButton: { backgroundColor: '#34C759', padding: 40, borderRadius: 100, width: 220, height: 220, justifyContent: 'center', alignItems: 'center', elevation: 12 },
     startText: { color: 'white', fontWeight: 'bold', fontSize: 26, textAlign: 'center' },
-    startNote: { marginTop: 30, color: '#666', textAlign: 'center', fontSize: 14, paddingHorizontal: 20 },
     wardHint: { fontSize: 14, color: '#94a3b8', fontStyle: 'italic', lineHeight: 20, marginBottom: 8 },
     linkButton: { marginBottom: 10 },
     linkButtonText: { color: '#4338ca', fontWeight: '700', fontSize: 14 },
