@@ -10,9 +10,14 @@ import {
 export type { SurveyFieldConfig };
 export { DEFAULT_SURVEY_FIELD_CONFIG, DEFAULT_SURVEY_FIELD_CONFIG as DEFAULT_FIELD_CONFIG, mergeFieldConfig };
 
-export async function fetchFieldConfig(): Promise<SurveyFieldConfig> {
+export async function fetchFieldConfig(assemblyNo?: number | null, wardId?: number | null): Promise<SurveyFieldConfig> {
     try {
-        const res = await axios.get(`${API_URL}/api/survey-form-config`);
+        const res = await axios.get(`${API_URL}/api/survey-form-config`, {
+            params: {
+                ...(assemblyNo ? { assembly_no: assemblyNo } : {}),
+                ...(wardId ? { ward_id: wardId } : {}),
+            },
+        });
         return mergeFieldConfig(res.data);
     } catch {
         return DEFAULT_SURVEY_FIELD_CONFIG;

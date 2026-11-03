@@ -262,17 +262,22 @@ function SurveyFormScreen({ profile }: { profile: SurveyorProfile | null }) {
             pollingStationNumber: '',
             dynamicAnswers: {},
         }));
+        fetchFieldConfig(ward.assembly_no, ward.id).then(setFieldConfig);
     }, [linkedWardName, wards]);
 
     useEffect(() => {
         if (!form.gbaWardId) {
             setBooths([]);
             setDynamicQuestions([]);
+            // Reset to global field config when ward is deselected
+            fetchFieldConfig().then(setFieldConfig);
             return;
         }
         fetchBooths(form.gbaWardId);
         const selectedWard = wards.find(w => w.id === form.gbaWardId);
         if (selectedWard?.ward_name_en) fetchDynamicQuestions(selectedWard.ward_name_en);
+        // Reload field visibility scoped to the selected ward's assembly + ward
+        fetchFieldConfig(selectedWard?.assembly_no, form.gbaWardId).then(setFieldConfig);
     }, [form.gbaWardId, wards]);
 
     const fetchDynamicQuestions = async (wardName: string) => {
@@ -838,7 +843,8 @@ const styles = StyleSheet.create({
         borderColor: '#e2e8f0',
         backgroundColor: '#ffffff',
     },
-    questionLabel: { fontSize: 14, fontWeight: '600', color: '#0f172a', lineHeight: 20, marginBottom: 10 },
+    questionLabel: { fontSize: 14, fontWeight: '600', color: '#0f172a', lineHeight: 20, marginBottom: 6 },
+    questionSubLabel: { fontSize: 12, color: '#64748b', lineHeight: 17, marginBottom: 10 },
     label: { fontSize: 14, marginBottom: 5, fontWeight: 'bold', color: '#444', marginTop: 10 },
     labelMuted: { color: '#94a3b8' },
     readOnlyFieldWrap: { position: 'relative', marginBottom: 10 },

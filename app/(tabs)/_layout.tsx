@@ -10,7 +10,7 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: '#007AFF',
-        sceneContainerStyle: { flex: 1, width: '100%' },
+        sceneStyle: { flex: 1, width: '100%' },
       }}
     >
       <Tabs.Screen
