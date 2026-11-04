@@ -17,6 +17,7 @@ import { premium } from '../../constants/premiumTheme';
 import CustomDropdown, { type DropdownOption } from '../CustomDropdown';
 import {
   DEFAULT_SURVEY_FIELD_CONFIG,
+  buildFormConfigPutBody,
   mergeFieldConfig,
   SURVEYOR_FIELD_LABELS,
   VOTER_FIELD_LABELS,
@@ -126,7 +127,7 @@ export default function FormFieldsPanel() {
     setSaving(true);
     try {
       const token = await SecureStore.getItemAsync('token');
-      const res = await axios.put(`${API_URL}/api/survey-form-config`, config, {
+      const res = await axios.put(`${API_URL}/api/survey-form-config`, buildFormConfigPutBody(config, { assemblyNo, wardId }), {
         params: {
           ...(assemblyNo ? { assembly_no: Number(assemblyNo) } : {}),
           ...(wardId ? { ward_id: Number(wardId) } : {}),

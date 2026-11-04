@@ -46,15 +46,21 @@ async function fileIsReady(path: string): Promise<boolean> {
 }
 
 async function materializeDataUrl(surveyId: number, dataUrl: string): Promise<string> {
-  const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/is);
-  if (!match) throw new Error('Invalid audio data URL');
+  const trimmed = dataUrl.trim();
+  const commaIdx = trimmed.indexOf(',');
+  if (commaIdx === -1 || !trimmed.startsWith('data:') || !/;base64/i.test(trimmed.slice(0, commaIdx))) {
+    throw new Error('Invalid audio data URL');
+  }
+  const meta = trimmed.slice(0, commaIdx);
+  const payload = trimmed.slice(commaIdx + 1).replace(/\s/g, '');
+  const mime = meta.slice(5).split(';')[0]?.trim() || 'audio/webm';
 
-  const ext = extFromMime(match[1]);
+  const ext = extFromMime(mime);
   const path = cachePath(surveyId, ext);
 
   if (await fileIsReady(path)) return path;
 
-  await FileSystem.writeAsStringAsync(path, match[2], { encoding: 'base64' });
+  await FileSystem.writeAsStringAsync(path, payload, { encoding: 'base64' });
   if (!(await fileIsReady(path))) throw new Error('Failed to write audio cache');
   return path;
 }

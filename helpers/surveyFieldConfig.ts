@@ -39,6 +39,17 @@ export function mergeFieldConfig(raw: Partial<SurveyFieldConfig> | null | undefi
     };
 }
 
+export function buildFormConfigPutBody(
+    config: SurveyFieldConfig,
+    scope: { assemblyNo: string; wardId: string },
+): Record<string, unknown> {
+    return {
+        ...config,
+        scope_assembly_no: scope.assemblyNo ? Number(scope.assemblyNo) : null,
+        scope_ward_id: scope.wardId ? Number(scope.wardId) : null,
+    };
+}
+
 /** @deprecated Use DEFAULT_SURVEY_FIELD_CONFIG */
 export const DEFAULT_FIELD_CONFIG = DEFAULT_SURVEY_FIELD_CONFIG;
 
